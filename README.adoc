@@ -1,3 +1,7 @@
+= This is nix-basements fork of https://gitlab.com/rycee/nmd/
+
+Original Readme:
+
 = nmd
 
 == Introduction

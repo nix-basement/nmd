@@ -35,12 +35,19 @@ let
   # See https://github.com/NixOS/nixpkgs/pull/166509
   docbook-xsl-ns = pkgs.docbook-xsl-ns.override { withManOptDedupPatch = true; };
 
+  xslTNG = builtins.fetchzip {
+    src = "https://github.com/docbook/xslTNG/releases/download/1.8.0/docbook-xslTNG-1.8.0.zip";
+    sha256 = "1ws5a1p0avscjdl9x3hkcryl216xigyanmp2la8k1h6d1af7scsw";
+  };
+
+
+
   docBookFromAsciiDocDirectory = pkgs.runCommand "converted-asciidoc" {
-    nativeBuildInputs = [ (getBin pkgs.asciidoc) (getBin pkgs.libxslt) ];
+    nativeBuildInputs = [ (getBin pkgs.asciidoctor) (getBin pkgs.libxslt) ];
   } ''
     function convert() {
       mkdir -p $(dirname $2)
-      asciidoc -s -d ${documentType} -b docbook --out-file - "$1" \
+      asciidoctor -s -d ${documentType} -b docbook --out-file - "$1" \
         | xsltproc -o "$2" ${docbook5}/share/xml/docbook-5.0/tools/db4-upgrade.xsl -
     }
 
@@ -139,10 +146,10 @@ let
   # The XSL template to use. This is an extension of the standard
   # chunktoc.xsl template but with minor enhancements for highlight.js
   # support.
-  docbookXsl = pkgs.substituteAll {
-    src = ../lib/nmd-chunktoc.xsl;
-    docbook_xsl_ns = docbook-xsl-ns;
-  };
+  # docbookXsl = pkgs.substituteAll {
+  #   src = ../lib/nmd-chunktoc.xsl;
+  #   docbook_xsl_ns = docbook-xsl-ns;
+  # };
 
   olinkDb = runXmlCommand "manual-olinkdb" { } ''
     mkdir $out
@@ -152,7 +159,7 @@ let
       --stringparam collect.xref.targets only \
       --stringparam targets.filename "$out/manual.db" \
       --nonet \
-      ${docbookXsl} \
+      ${xslTNG}/xslt/main.xsl \
       ${manualCombined}/manual-combined.xml
 
     cat > "$out/olinkdb.xml" <<EOF
